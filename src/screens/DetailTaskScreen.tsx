@@ -2,6 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import React, { useState } from 'react';
+import { supabase } from '../supabase/supabase';
 import {
   Alert,
   Platform,
@@ -24,36 +25,51 @@ interface Props {
 
 export default function DetailTaskScreen({ route }: Props) {
   const navigation = useNavigation<DetailTaskNavProp>();
-  const { item, setTasks } = route.params;
+  const { item, setTasks, isCompleted } = route.params;
 
   const [title, setTitle] = useState(item.title);
   const [desc, setDesc] = useState(item.desc);
   const [date, setDate] = useState(item.date ? new Date(item.date) : new Date());
   const [show, setShow] = useState(false);
 
-  const onChange = (event: any, selectedDate?: Date) => {
+  const onChange = (_: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') setShow(false);
     if (selectedDate) setDate(selectedDate);
   };
 
-  const updateTask = () => {
-    if (!title.trim() || !desc.trim() || !date) {
-      Alert.alert('Incomplete Information', 'Please fill in all fields before saving.');
-      return;
-    }
+  const updateTask = async () => {
+  if (!title.trim() || !desc.trim() || !date) {
+    Alert.alert('Incomplete Information', 'Please fill in all fields before saving.');
+    return;
+  }
 
-    const updatedTask: Task = {
-      ...item,
-      title,
-      desc,
-      date: date.toISOString(),
-    };
+  try {
+    // UPDATE task di Supabase
+    const { data, error } = await supabase
+      .from('tasks')
+      .update({
+        title,
+        desc,
+        date: date.toISOString(),
+        done: item.done, // biar status done tetap
+      })
+      .eq('id', item.id)
+      .select();
 
-    setTasks((prev: Task[]) => prev.map(t => (t.id === item.id ? updatedTask : t)));
+    if (error) throw error;
+
+    // update state lokal biar UI langsung refresh
+    setTasks((prev: Task[]) =>
+      prev.map(t => (t.id === item.id ? data[0] : t))
+    );
 
     Alert.alert('Success', 'Task has been updated successfully!');
     navigation.goBack();
-  };
+  } catch (error) {
+    console.log('Error updating task:', error);
+    Alert.alert('Error', 'Something went wrong. Please try again.');
+  }
+};
 
   return (
     <View style={styles.container}>
@@ -69,20 +85,25 @@ export default function DetailTaskScreen({ route }: Props) {
       <View style={styles.card}>
         <Text style={styles.label}>Title</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, isCompleted && styles.readOnlyInput]}
           value={title}
           onChangeText={setTitle}
+          editable={!isCompleted}
           placeholder="Enter task title"
           placeholderTextColor="#999"
         />
 
-        <Text style={styles.label}>Calender</Text>
-        <TouchableOpacity onPress={() => setShow(true)} style={styles.datePicker}>
+        <Text style={styles.label}>Calendar</Text>
+        <TouchableOpacity
+          onPress={() => !isCompleted && setShow(true)}
+          style={[styles.datePicker, isCompleted && styles.readOnlyInput]}
+          activeOpacity={isCompleted ? 1 : 0.7}
+        >
           <Text style={{ color: '#333' }}>{date.toLocaleDateString()}</Text>
           <Ionicons name="calendar" size={20} color="#333" />
         </TouchableOpacity>
 
-        {show && (
+        {show && !isCompleted && (
           <DateTimePicker
             value={date}
             mode="date"
@@ -93,32 +114,43 @@ export default function DetailTaskScreen({ route }: Props) {
 
         <Text style={styles.label}>Description</Text>
         <TextInput
-          style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
+          style={[
+            styles.input,
+            { height: 100, textAlignVertical: 'top' },
+            isCompleted && styles.readOnlyInput,
+          ]}
           multiline
           value={desc}
           onChangeText={setDesc}
+          editable={!isCompleted}
           placeholder="Enter task description"
           placeholderTextColor="#999"
         />
       </View>
 
       {/* Save Button */}
-      <TouchableOpacity
-        style={[
-          styles.saveButton,
-          (!title.trim() || !desc.trim()) && { backgroundColor: '#a6b8f5' },
-        ]}
-        onPress={updateTask}
-        disabled={!title.trim() || !desc.trim()}
-      >
-        <Text style={styles.saveText}>Save</Text>
-      </TouchableOpacity>
+      {!isCompleted && (
+        <TouchableOpacity
+          style={[
+            styles.saveButton,
+            (!title.trim() || !desc.trim()) && { backgroundColor: '#a6b8f5' },
+          ]}
+          onPress={updateTask}
+          disabled={!title.trim() || !desc.trim()}
+        >
+          <Text style={styles.saveText}>Save</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fbff', alignItems: 'center' },
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fbff',
+    alignItems: 'center',
+  },
 
   headerBox: {
     backgroundColor: '#628ecb',
@@ -168,4 +200,9 @@ const styles = StyleSheet.create({
     marginTop: 25,
   },
   saveText: { color: '#fff', fontWeight: '600' },
+
+  readOnlyInput: {
+    backgroundColor: '#e5e7eb',
+    color: '#6b7280',
+  },
 });

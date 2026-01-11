@@ -14,6 +14,7 @@ export type RootStackParamList = {
   DetailTask: {
     item: Task;
     setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+    isCompleted: boolean;
   };
 };
 

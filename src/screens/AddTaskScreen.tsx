@@ -2,6 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import React, { useState } from 'react';
+import { supabase } from '../supabase/supabase';
 import {
   Alert,
   Platform,
@@ -37,32 +38,60 @@ export default function AddTaskScreen({ route }: Props) {
     setDate(currentDate);
   };
 
-  const createTask = () => {
-    if (!title.trim() || !desc.trim() || !date) {
-      Alert.alert('Incomplete Information', 'Please fill in all fields before saving.');
-      return;
-    }
+  const createTask = async () => {
+  
+  if (!title.trim() || !desc.trim() || !date) {
+    Alert.alert('Incomplete Information', 'Please fill in all fields before saving.');
+    return;
+  }
 
-    const newTask: Task = {
-      id: task ? task.id : Date.now(),
-      title,
-      desc,
-      date: date.toISOString(),
-      done: task ? task.done : false,
-    };
-
+  try {
     if (task) {
+      const { data, error } = await supabase
+        .from('tasks')
+        .update({
+          title,
+          desc,
+          date: date.toISOString(),
+          done: task.done, 
+        })
+        .eq('id', task.id)
+        .select(); 
+
+      if (error) throw error;
+
       setTasks((prev: Task[]) =>
-        prev.map(t => (t.id === task.id ? newTask : t))
+        prev.map(t => (t.id === task.id ? data[0] : t))
       );
+
       Alert.alert('Success', 'Task has been updated successfully!');
     } else {
-      setTasks((prev: Task[]) => [...prev, newTask]);
+
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([
+          {
+            title,
+            desc,
+            date: date.toISOString(),
+            done: false,
+          },
+        ])
+        .select(); 
+
+      if (error) throw error;
+
+      setTasks((prev: Task[]) => [...prev, data[0]]);
+
       Alert.alert('Success', 'New task has been created successfully!');
     }
 
     navigation.goBack();
-  };
+  } catch (error) {
+    console.log('Error creating/updating task:', error);
+    Alert.alert('Error', 'Something went wrong. Please try again.');
+  }
+};
 
   return (
     <View style={styles.container}>

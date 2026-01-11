@@ -41,3 +41,9 @@ app-example
 # generated native folders
 /ios
 /android
+
+/ios
+/android
+
+# Supabase config
+src/supabase/
