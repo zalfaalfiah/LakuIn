@@ -27,6 +27,7 @@ Aplikasi ini dibuat menggunakan:
 - Expo (versi 6.3.12)
 - Node.js (versi 22.20.0)
 - npm (versi 10.9.3)
+- Supabase API
 
 ## Cara Menjalankan
 1. Clone repo:
@@ -48,6 +49,7 @@ npx expo start
 - Laptop: Windows 11
 - VS Code Extension: MobileView
 - Perangkat fisik: Smartphone dengan aplikasi Expo Go
+- Smartphone Android
 
 ## Ringkasan Belajar
 Pada praktikum ini, kami belajar membuat aplikasi To-Do List bernama LakuIn menggunakan React Native dan Expo. Kami memahami cara membuat dan mengelola komponen, menggunakan state dan props, serta menerapkan navigasi antarhalaman. Selain itu, kami juga belajar menggunakan React Hooks seperti useState untuk mengatur data tugas dan menampilkan daftar dengan FlatList. Dari praktikum ini, kami jadi lebih paham bagaimana struktur aplikasi mobile dibuat dan bagaimana setiap fitur saling terhubung secara fungsional dan tampilan.
