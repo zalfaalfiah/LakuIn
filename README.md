@@ -1,7 +1,7 @@
 # Aplikasi LakuIn
 ## Aplikasi To-Do List untuk memenuhi Ujian Akhir Semester Mata Kuliah Pemrograman Mobile Multiplatform
 
-Praktikum ini bertujuan untuk memahami dasar React Native, termasuk pembuatan komponen, penggunaan state dan props, layout dengan Flexbox, serta menampilkan data menggunakan FlatList. 
+Praktikum ini bertujuan untuk memahami dasar React Native, termasuk pembuatan komponen, penggunaan state dan props, layout dengan Flexbox, serta menampilkan data menggunakan FlatList dan integrasi atau penggunaan Supabase API. 
 
 ## Anggota Kelompok 2
 
